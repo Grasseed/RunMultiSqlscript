@@ -19,6 +19,14 @@ namespace RunMultiSqlscript
 		{
 			InitializeComponent();
 		}
+
+        #region 屬性
+        //路徑設定
+		public static string FilePath = $@"{Directory.GetCurrentDirectory()}{"\\"}";//當前工作路徑
+		public static string LogPath = $@"{FilePath}{"\\"}{"log"}";//Log檔放置路徑
+
+
+		//資料庫連線區啟用設定
 		public void ConnectionSettings(bool Status)
 		{
 			DBLocation.Enabled = Status;
@@ -26,18 +34,61 @@ namespace RunMultiSqlscript
 			UserName.Enabled = Status;
 			password.Enabled = Status;
 		}
+		//資料夾路徑&顯示項目區域啟用設定
 		public void FolderPathCheckedListSettings(bool Status)
         {
 			FolderPath.Enabled = Status;
 			SelectFolder.Enabled = Status;
 			FileCheckedList.Enabled = Status;
 		}
+		//匯出list.sql&執行scripts區域啟用設定
 		public void ScriptBtnSettings(bool Status)
 		{
 			OutputScripts.Enabled = Status;
 			RunScript.Enabled = Status;
 		}
-		private void SelectFolder_Click(object sender, EventArgs e)
+        #endregion
+
+        #region 讀取\寫入
+        /// <summary>
+        /// 清空檔案內容
+        /// </summary>
+        /// <param name="path"></param>
+        public void ContentClear(string path)
+        {
+			FileStream fs;
+			fs = new FileStream(path, FileMode.Truncate, FileAccess.Write);//Truncate模式打開文件可以清空。
+			fs.Close();
+		}
+		/// <summary>
+		/// 寫入檔案內容(ANSI編碼)
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="content"></param>
+		public void ContentWrite(string path,string content)
+        {
+			using (StreamWriter writetext = new StreamWriter(path, true, Encoding.Default))
+			{
+				writetext.WriteLine(content);
+			}
+		}
+		/// <summary>
+		/// 讀取檔案內容
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns readtext></returns>
+		public string ContentRead(string path)
+        {
+			string readtext = "";
+			using (StreamReader reader = new StreamReader(path, Encoding.Default))
+			{
+				readtext = reader.ReadToEnd();				
+			}
+			return readtext;
+		}
+        #endregion
+
+        private void SelectFolder_Click(object sender, EventArgs e)
 		{
 			FolderPath.Clear();
 			FileCheckedList.Items.Clear();
@@ -60,8 +111,6 @@ namespace RunMultiSqlscript
 				// 讀取資料夾中檔案名稱
 				foreach (string fname in System.IO.Directory.GetFiles(filepath))
 				{
-					filename = "";
-					//filename = filename + fname + "\r\n";
 					filename = fname;
 					if (Path.GetFileName(filename).ToLower().Contains(".sql"))
 					{
@@ -127,8 +176,6 @@ namespace RunMultiSqlscript
 					// 讀取資料夾中檔案名稱
 					foreach (string fname in Directory.GetFiles(filepath))
 					{
-						filename = "";
-						//filename = filename + fname + "\r\n";
 						filename = fname;
 						if (Path.GetFileName(filename).ToLower().Contains(".sql"))
 						{
@@ -157,24 +204,16 @@ namespace RunMultiSqlscript
                 {
 					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";//寫入sql字串資料
 				}
-				// 判斷檔案是否存在
 				string FileName = saveFileDialog.FileName;
-				if (!File.Exists(FileName))
+				
+				// 判斷檔案是否存在
+				if (File.Exists(FileName))
 				{
-					using (StreamWriter writetext = new StreamWriter(FileName, true, Encoding.Default))
-					{
-						writetext.WriteLine("");
-					}
+					//清空文件
+					ContentClear(saveFileDialog.FileName);
 				}
-				//清空文件
-				FileStream fs;
-				fs = new FileStream(saveFileDialog.FileName, FileMode.Truncate, FileAccess.Write);//Truncate模式打開文件可以清空。
-				fs.Close();
 				//寫入script
-				using (StreamWriter writetext = new StreamWriter(saveFileDialog.FileName,true,Encoding.Default))
-                {
-					writetext.WriteLine(sqlText);
-                }
+				ContentWrite(saveFileDialog.FileName, sqlText);
             }
         }
 
@@ -253,30 +292,27 @@ namespace RunMultiSqlscript
         private void RunScript_Click(object sender, EventArgs e)
         {
 			string sqlText = "";
-			string readtext = "";
-			string FilePath = $@"{Directory.GetCurrentDirectory()}{"\\"}";
-			DialogResult result = new DialogResult();
 
-			//判斷資料夾路徑是否存在
-			if(Directory.Exists(FolderPath.Text))
+            //判斷資料夾路徑是否存在
+            if (Directory.Exists(FolderPath.Text))
 			{
 				foreach (var str in FileCheckedList.CheckedItems)
 				{
 					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";
 				}
-				//儲存清單.sql
-				using (StreamWriter writetext = new StreamWriter($@"{FilePath}{"list.sql"}",true,Encoding.Default))
-				{
-					writetext.WriteLine(sqlText);
-					sqlText = "";
-				}
-				//讀取 一次執行資料夾內所有的Script 文字
-				using (StreamReader reader = new StreamReader($@"{FilePath}{"sample.bat"}", Encoding.Default))
-				{
-					readtext = reader.ReadToEnd();
-                }
 
-				//設定bat檔內的資練庫連線資訊
+				if (File.Exists($@"{FilePath}{"list.sql"}"))
+				{
+					//清空文件
+					ContentClear($@"{FilePath}{"list.sql"}");
+				}
+
+				//儲存清單.sql
+				ContentWrite($@"{FilePath}{"list.sql"}", sqlText);
+                //讀取 一次執行資料夾內所有的Script 文字
+                string readtext = ContentRead($@"{FilePath}{"sample.bat"}");
+
+                //設定bat檔內的資練庫連線資訊
                 readtext = readtext.Replace("dbIp=*", $@"dbIp={DBLocation.Text}");
 				readtext = readtext.Replace("dbName=*", $@"dbName={DBName.Text}");
 				readtext = readtext.Replace("dbUsrAcc=*", $@"dbUsrAcc={UserName.Text}");
@@ -284,29 +320,22 @@ namespace RunMultiSqlscript
 				readtext = readtext.Replace("batchFilePath=\"\"", $@"batchFilePath=""{FilePath}""");
 				readtext = readtext.Replace("dbSqlFilePath=\"\"", $@"dbSqlFilePath=""{FilePath}{"list.sql"}""");
 
-				// 判斷檔案是否存在
 				string FileName = $@"{FilePath}{"RunScripts.bat"}";
-				if (!File.Exists(FileName))
+
+				// 判斷檔案是否存在
+				if(File.Exists(FileName))
 				{
-					using (StreamWriter writetext = new StreamWriter(FileName,true,Encoding.Default))
-					{
-						writetext.WriteLine("");
-					}
+					//清空文件
+					ContentClear(FileName);
 				}
-				//清空文件
-				FileStream fs;
-				fs = new FileStream($@"{FilePath}{"RunScripts.bat"}", FileMode.Truncate, FileAccess.Write);//Truncate模式打開文件可以清空。
-				fs.Close();
+
 				//寫入欲執行bat
-				using (StreamWriter writer = new StreamWriter($@"{FilePath}{"RunScripts.bat"}",true, Encoding.Default))
-				{
-					writer.WriteLine(readtext);
-				}
-				result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
-				if (result == DialogResult.Yes)
+				ContentWrite(FileName, readtext);
+                DialogResult result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
 				{
 					//如果log資料夾不存在就自動生成
-					if (!Directory.Exists(($@"{FilePath}{"\\"}{"log"}")))
+					if (!Directory.Exists(LogPath))
 					{ 
 						Directory.CreateDirectory("log");
                     }
@@ -320,7 +349,7 @@ namespace RunMultiSqlscript
             }
             else
             {
-				MessageBox.Show("資料夾 路徑錯誤","提示");
+				MessageBox.Show("資料夾路徑錯誤","提示");
             }
 		}
 
