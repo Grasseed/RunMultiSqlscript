@@ -355,6 +355,31 @@ namespace RunMultiSqlscript
 
         private void FileCheckedList_SelectedIndexChanged(object sender, EventArgs e)
         {
+			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
+		}
+
+        private void AllChecked_Click(object sender, EventArgs e)
+        {
+			//選取全部列表項目
+			for (int i = 0; i < FileCheckedList.Items.Count; i++)
+			{
+				FileCheckedList.SetItemChecked(i, true);
+			}
+			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
+		}
+
+		private void AllCheckedClear_Click(object sender, EventArgs e)
+		{
+			//取消選取全部列表項目
+			for (int i = 0; i < FileCheckedList.Items.Count; i++)
+			{
+				FileCheckedList.SetItemChecked(i, false);
+			}
+			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
+		}
+		//右側script生成&執行區域啟用/禁用
+		public void ScriptBtnLock()
+        {
 			if (FileCheckedList.CheckedItems.Count > 0)
 			{
 				//開啟右側script生成&執行區域
@@ -366,5 +391,5 @@ namespace RunMultiSqlscript
 				ScriptBtnSettings(false);
 			}
 		}
-    }
+	}
 }
