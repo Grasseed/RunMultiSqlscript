@@ -302,7 +302,7 @@ namespace RunMultiSqlscript
 				{
 					writer.WriteLine(readtext);
 				}
-				result = MessageBox.Show("是否執行該批次檔?", "提示", MessageBoxButtons.YesNo);
+				result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
 				if (result == DialogResult.Yes)
 				{
 					//開始執行批次檔
