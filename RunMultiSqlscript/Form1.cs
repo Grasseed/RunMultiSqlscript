@@ -10,6 +10,9 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
+using System.Data.SqlTypes;
+using System.Xml.Linq;
 
 namespace RunMultiSqlscript
 {
@@ -25,9 +28,12 @@ namespace RunMultiSqlscript
 		public static string FilePath = $@"{Directory.GetCurrentDirectory()}{"\\"}";//當前工作路徑
 		public static string LogPath = $@"{FilePath}{"\\"}{"log"}";//Log檔放置路徑
 
+        //設定Log檔名
+        public string FileLog = "view_" + String.Format("{0:yyyyMMdd}", DateTime.Now) + "_" + String.Format("{0:HHmmss}", DateTime.Now) + ".log";
 
-		//資料庫連線區啟用設定
-		public void ConnectionSettings(bool Status)
+
+        //資料庫連線區啟用設定
+        public void ConnectionSettings(bool Status)
 		{
 			DBLocation.Enabled = Status;
 			DBName.Enabled = Status;
@@ -40,7 +46,9 @@ namespace RunMultiSqlscript
 			FolderPath.Enabled = Status;
 			SelectFolder.Enabled = Status;
 			FileCheckedList.Enabled = Status;
-		}
+            AllChecked.Enabled = Status;
+            AllCheckedClear.Enabled = Status;
+        }
 		//匯出list.sql&執行scripts區域啟用設定
 		public void ScriptBtnSettings(bool Status)
 		{
@@ -88,6 +96,10 @@ namespace RunMultiSqlscript
 		}
         #endregion
 
+        #region 功能
+        /// <summary>
+        /// 選擇資料夾
+        /// </summary>
         private void SelectFolder_Click(object sender, EventArgs e)
 		{
 			FolderPath.Clear();
@@ -120,7 +132,10 @@ namespace RunMultiSqlscript
 			}
 		}
 
-		private void FileCheckedList_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 項目清單
+        /// </summary>
+        private void FileCheckedList_Click(object sender, EventArgs e)
 		{
             try
             {
@@ -153,8 +168,10 @@ namespace RunMultiSqlscript
             }
         }
 
-
-		private void FolderPath_KeyDown(object sender, KeyEventArgs e)
+        /// <summary>
+        /// 資料夾路徑區對應鍵盤按鍵
+        /// </summary>
+        private void FolderPath_KeyDown(object sender, KeyEventArgs e)
 		{
 			try
 			{
@@ -191,6 +208,9 @@ namespace RunMultiSqlscript
             }
 		}
 
+        /// <summary>
+        /// 輸出SQL清單
+        /// </summary>
         private void OutputScripts_Click(object sender, EventArgs e)
         {
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -204,7 +224,7 @@ namespace RunMultiSqlscript
                 {
 					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";//寫入sql字串資料
 				}
-				string FileName = saveFileDialog.FileName;
+				string FileName = saveFileDialog.FileName + saveFileDialog.Filter;//檔名+副檔名
 				
 				// 判斷檔案是否存在
 				if (File.Exists(FileName))
@@ -217,6 +237,9 @@ namespace RunMultiSqlscript
             }
         }
 
+        /// <summary>
+        /// 資料庫連線
+        /// </summary>
         private void DBConnect_Click(object sender, EventArgs e)
         {
 			string ConnectionString = $@"Data Source={DBLocation.Text};Initial Catalog={DBName.Text};Persist Security Info=True;User Id={UserName.Text};Password={password.Text}";
@@ -289,6 +312,9 @@ namespace RunMultiSqlscript
 			}
         }
 
+        /// <summary>
+        /// 執行資料庫SQL更新
+        /// </summary>
         private void RunScript_Click(object sender, EventArgs e)
         {
 			string sqlText = "";
@@ -309,28 +335,7 @@ namespace RunMultiSqlscript
 
 				//儲存清單.sql
 				ContentWrite($@"{FilePath}{"list.sql"}", sqlText);
-                //讀取 一次執行資料夾內所有的Script 文字
-                string readtext = ContentRead($@"{FilePath}{"sample.bat"}");
 
-                //設定bat檔內的資練庫連線資訊
-                readtext = readtext.Replace("dbIp=*", $@"dbIp={DBLocation.Text}");
-				readtext = readtext.Replace("dbName=*", $@"dbName={DBName.Text}");
-				readtext = readtext.Replace("dbUsrAcc=*", $@"dbUsrAcc={UserName.Text}");
-				readtext = readtext.Replace("dbUsrPwd=*", $@"dbUsrPwd={password.Text}");
-				readtext = readtext.Replace("batchFilePath=\"\"", $@"batchFilePath=""{FilePath}""");
-				readtext = readtext.Replace("dbSqlFilePath=\"\"", $@"dbSqlFilePath=""{FilePath}{"list.sql"}""");
-
-				string FileName = $@"{FilePath}{"RunScripts.bat"}";
-
-				// 判斷檔案是否存在
-				if(File.Exists(FileName))
-				{
-					//清空文件
-					ContentClear(FileName);
-				}
-
-				//寫入欲執行bat
-				ContentWrite(FileName, readtext);
                 DialogResult result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
                 if (result == DialogResult.Yes)
 				{
@@ -339,11 +344,18 @@ namespace RunMultiSqlscript
 					{ 
 						Directory.CreateDirectory("log");
                     }
-					//開始執行批次檔
-					ProcessStartInfo process = new ProcessStartInfo();
-					process.FileName = "RunScripts.bat";
-					process.WorkingDirectory = FilePath;
-					Process.Start(process);
+
+					//設定sqlcmd參數
+                    string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -i ""{FilePath}{"list.sql"}"" -o ""{FilePath}{"log"}{"\\"}{FileLog}""";
+					//開始執行sqlcmd
+					ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
+					process.UseShellExecute = false;
+					process.CreateNoWindow = true;
+                    process.WindowStyle = ProcessWindowStyle.Hidden;
+                    process.RedirectStandardOutput = true;
+                    Process proc = new Process();
+					proc.StartInfo = process;
+                    proc.Start();
 					MessageBox.Show($@"已放置執行紀錄於.\log");
 				}
             }
@@ -353,11 +365,17 @@ namespace RunMultiSqlscript
             }
 		}
 
+        /// <summary>
+        /// 項目更動
+        /// </summary>
         private void FileCheckedList_SelectedIndexChanged(object sender, EventArgs e)
         {
 			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
 		}
 
+        /// <summary>
+        /// 全部選取
+        /// </summary>
         private void AllChecked_Click(object sender, EventArgs e)
         {
 			//選取全部列表項目
@@ -368,7 +386,10 @@ namespace RunMultiSqlscript
 			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
 		}
 
-		private void AllCheckedClear_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 取消全選
+        /// </summary>
+        private void AllCheckedClear_Click(object sender, EventArgs e)
 		{
 			//取消選取全部列表項目
 			for (int i = 0; i < FileCheckedList.Items.Count; i++)
@@ -377,8 +398,11 @@ namespace RunMultiSqlscript
 			}
 			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
 		}
-		//右側script生成&執行區域啟用/禁用
-		public void ScriptBtnLock()
+
+        /// <summary>
+        /// 右側script生成&執行區域啟用/禁用
+        /// </summary>
+        public void ScriptBtnLock()
         {
 			if (FileCheckedList.CheckedItems.Count > 0)
 			{
@@ -391,5 +415,6 @@ namespace RunMultiSqlscript
 				ScriptBtnSettings(false);
 			}
 		}
-	}
+        #endregion
+    }
 }

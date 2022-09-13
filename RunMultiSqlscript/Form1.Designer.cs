@@ -59,7 +59,7 @@
             this.FileCheckedList.Enabled = false;
             this.FileCheckedList.FormattingEnabled = true;
             this.FileCheckedList.Location = new System.Drawing.Point(694, 275);
-            this.FileCheckedList.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.FileCheckedList.Margin = new System.Windows.Forms.Padding(6);
             this.FileCheckedList.Name = "FileCheckedList";
             this.FileCheckedList.Size = new System.Drawing.Size(760, 256);
             this.FileCheckedList.TabIndex = 0;
@@ -89,7 +89,7 @@
             // DBLocation
             // 
             this.DBLocation.Location = new System.Drawing.Point(64, 103);
-            this.DBLocation.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.DBLocation.Margin = new System.Windows.Forms.Padding(6);
             this.DBLocation.Name = "DBLocation";
             this.DBLocation.Size = new System.Drawing.Size(510, 31);
             this.DBLocation.TabIndex = 3;
@@ -97,7 +97,7 @@
             // DBName
             // 
             this.DBName.Location = new System.Drawing.Point(64, 219);
-            this.DBName.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.DBName.Margin = new System.Windows.Forms.Padding(6);
             this.DBName.Name = "DBName";
             this.DBName.Size = new System.Drawing.Size(510, 31);
             this.DBName.TabIndex = 5;
@@ -115,7 +115,7 @@
             // UserName
             // 
             this.UserName.Location = new System.Drawing.Point(64, 344);
-            this.UserName.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.UserName.Margin = new System.Windows.Forms.Padding(6);
             this.UserName.Name = "UserName";
             this.UserName.Size = new System.Drawing.Size(510, 31);
             this.UserName.TabIndex = 7;
@@ -133,7 +133,7 @@
             // password
             // 
             this.password.Location = new System.Drawing.Point(64, 450);
-            this.password.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.password.Margin = new System.Windows.Forms.Padding(6);
             this.password.Name = "password";
             this.password.PasswordChar = '*';
             this.password.Size = new System.Drawing.Size(510, 31);
@@ -152,7 +152,7 @@
             // DBConnect
             // 
             this.DBConnect.Location = new System.Drawing.Point(64, 539);
-            this.DBConnect.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.DBConnect.Margin = new System.Windows.Forms.Padding(6);
             this.DBConnect.Name = "DBConnect";
             this.DBConnect.Size = new System.Drawing.Size(150, 48);
             this.DBConnect.TabIndex = 10;
@@ -184,7 +184,7 @@
             // 
             this.FolderPath.Enabled = false;
             this.FolderPath.Location = new System.Drawing.Point(694, 103);
-            this.FolderPath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.FolderPath.Margin = new System.Windows.Forms.Padding(6);
             this.FolderPath.Name = "FolderPath";
             this.FolderPath.Size = new System.Drawing.Size(510, 31);
             this.FolderPath.TabIndex = 14;
@@ -204,7 +204,7 @@
             // 
             this.SelectFolder.Enabled = false;
             this.SelectFolder.Location = new System.Drawing.Point(1250, 103);
-            this.SelectFolder.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.SelectFolder.Margin = new System.Windows.Forms.Padding(6);
             this.SelectFolder.Name = "SelectFolder";
             this.SelectFolder.Size = new System.Drawing.Size(150, 48);
             this.SelectFolder.TabIndex = 15;
@@ -216,7 +216,7 @@
             // 
             this.OutputScripts.Enabled = false;
             this.OutputScripts.Location = new System.Drawing.Point(696, 611);
-            this.OutputScripts.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.OutputScripts.Margin = new System.Windows.Forms.Padding(6);
             this.OutputScripts.Name = "OutputScripts";
             this.OutputScripts.Size = new System.Drawing.Size(204, 48);
             this.OutputScripts.TabIndex = 16;
@@ -228,7 +228,7 @@
             // 
             this.RunScript.Enabled = false;
             this.RunScript.Location = new System.Drawing.Point(912, 611);
-            this.RunScript.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.RunScript.Margin = new System.Windows.Forms.Padding(6);
             this.RunScript.Name = "RunScript";
             this.RunScript.Size = new System.Drawing.Size(150, 48);
             this.RunScript.TabIndex = 17;
@@ -259,6 +259,7 @@
             // 
             // AllChecked
             // 
+            this.AllChecked.Enabled = false;
             this.AllChecked.Location = new System.Drawing.Point(1188, 539);
             this.AllChecked.Name = "AllChecked";
             this.AllChecked.Size = new System.Drawing.Size(130, 48);
@@ -269,6 +270,7 @@
             // 
             // AllCheckedClear
             // 
+            this.AllCheckedClear.Enabled = false;
             this.AllCheckedClear.Location = new System.Drawing.Point(1324, 540);
             this.AllCheckedClear.Name = "AllCheckedClear";
             this.AllCheckedClear.Size = new System.Drawing.Size(130, 48);
@@ -304,7 +306,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.FileCheckedList);
-            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Form1";
             this.Text = "RunMultiSqlscript";
             this.ResumeLayout(false);
