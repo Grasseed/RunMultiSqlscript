@@ -161,7 +161,7 @@ namespace RunMultiSqlscript
 				string FileName = saveFileDialog.FileName;
 				if (!File.Exists(FileName))
 				{
-					using (StreamWriter writetext = new StreamWriter(FileName))
+					using (StreamWriter writetext = new StreamWriter(FileName, true, Encoding.Default))
 					{
 						writetext.WriteLine("");
 					}
@@ -254,6 +254,7 @@ namespace RunMultiSqlscript
         {
 			string sqlText = "";
 			string readtext = "";
+			string FilePath = $@"{Directory.GetCurrentDirectory()}{"\\"}";
 			DialogResult result = new DialogResult();
 
 			//判斷資料夾路徑是否存在
@@ -264,31 +265,30 @@ namespace RunMultiSqlscript
 					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";
 				}
 				//儲存清單.sql
-				using (StreamWriter writetext = new StreamWriter($@"{Directory.GetCurrentDirectory()}{"\\"}{"list.sql"}"))
+				using (StreamWriter writetext = new StreamWriter($@"{FilePath}{"list.sql"}",true,Encoding.Default))
 				{
 					writetext.WriteLine(sqlText);
 					sqlText = "";
 				}
 				//讀取 一次執行資料夾內所有的Script 文字
-				using (StreamReader reader = new StreamReader($@"{Directory.GetCurrentDirectory()}{"\\"}{"sample.bat"}", Encoding.Default))
+				using (StreamReader reader = new StreamReader($@"{FilePath}{"sample.bat"}", Encoding.Default))
 				{
 					readtext = reader.ReadToEnd();
                 }
 
 				//設定bat檔內的資練庫連線資訊
-				string FilePath = $@"{FolderPath.Text}{"\\..\\"}";
                 readtext = readtext.Replace("dbIp=*", $@"dbIp={DBLocation.Text}");
 				readtext = readtext.Replace("dbName=*", $@"dbName={DBName.Text}");
 				readtext = readtext.Replace("dbUsrAcc=*", $@"dbUsrAcc={UserName.Text}");
 				readtext = readtext.Replace("dbUsrPwd=*", $@"dbUsrPwd={password.Text}");
-				readtext = readtext.Replace("batchFilePath=\"\"", $@"batchFilePath=""{Path.GetFullPath(FilePath)}""");
-				readtext = readtext.Replace("dbSqlFilePath=\"\"", $@"dbSqlFilePath=""{Directory.GetCurrentDirectory()}{"\\"}{"list.sql"}""");
+				readtext = readtext.Replace("batchFilePath=\"\"", $@"batchFilePath=""{FilePath}""");
+				readtext = readtext.Replace("dbSqlFilePath=\"\"", $@"dbSqlFilePath=""{FilePath}{"list.sql"}""");
 
 				// 判斷檔案是否存在
 				string FileName = $@"{FilePath}{"RunScripts.bat"}";
 				if (!File.Exists(FileName))
 				{
-					using (StreamWriter writetext = new StreamWriter(FileName))
+					using (StreamWriter writetext = new StreamWriter(FileName,true,Encoding.Default))
 					{
 						writetext.WriteLine("");
 					}
@@ -305,12 +305,17 @@ namespace RunMultiSqlscript
 				result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
 				if (result == DialogResult.Yes)
 				{
+					//如果log資料夾不存在就自動生成
+					if (!Directory.Exists(($@"{FilePath}{"\\"}{"log"}")))
+					{ 
+						Directory.CreateDirectory("log");
+                    }
 					//開始執行批次檔
 					ProcessStartInfo process = new ProcessStartInfo();
 					process.FileName = "RunScripts.bat";
 					process.WorkingDirectory = FilePath;
 					Process.Start(process);
-					MessageBox.Show("已放置執行紀錄於./view.log");
+					MessageBox.Show($@"已放置執行紀錄於.\log");
 				}
             }
             else
