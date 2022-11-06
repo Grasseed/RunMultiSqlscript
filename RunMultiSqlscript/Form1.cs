@@ -318,9 +318,10 @@ namespace RunMultiSqlscript
         private void RunScript_Click(object sender, EventArgs e)
         {
 			string sqlText = "";
+			FileLog = "view_" + String.Format("{0:yyyyMMdd}", DateTime.Now) + "_" + String.Format("{0:HHmmss}", DateTime.Now) + ".log";
 
-            //判斷資料夾路徑是否存在
-            if (Directory.Exists(FolderPath.Text))
+			//判斷資料夾路徑是否存在
+			if (Directory.Exists(FolderPath.Text))
 			{
 				foreach (var str in FileCheckedList.CheckedItems)
 				{
