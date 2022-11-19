@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,13 +10,17 @@ namespace RunMultiSqlscript
 {
 	internal static class Program
 	{
-		/// <summary>
-		/// 應用程式的主要進入點。
-		/// </summary>
-		[STAThread]
+        public static IConfiguration Configuration;
+        /// <summary>
+        /// 應用程式的主要進入點。
+        /// </summary>
+        [STAThread]
 		static void Main()
 		{
-			Application.EnableVisualStyles();
+            var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            Configuration = builder.Build();
+            Application.EnableVisualStyles();
+			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new Form1());
 		}
