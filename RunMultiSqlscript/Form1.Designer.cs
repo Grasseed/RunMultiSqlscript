@@ -51,6 +51,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.AllChecked = new System.Windows.Forms.Button();
             this.AllCheckedClear = new System.Windows.Forms.Button();
+            this.RememberMe_CheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // FileCheckedList
@@ -151,7 +152,7 @@
             // 
             // DBConnect
             // 
-            this.DBConnect.Location = new System.Drawing.Point(64, 539);
+            this.DBConnect.Location = new System.Drawing.Point(64, 551);
             this.DBConnect.Margin = new System.Windows.Forms.Padding(6);
             this.DBConnect.Name = "DBConnect";
             this.DBConnect.Size = new System.Drawing.Size(150, 48);
@@ -163,7 +164,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(260, 548);
+            this.label6.Location = new System.Drawing.Point(260, 560);
             this.label6.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(165, 25);
@@ -173,7 +174,7 @@
             // ConnectionResult
             // 
             this.ConnectionResult.AutoSize = true;
-            this.ConnectionResult.Location = new System.Drawing.Point(450, 548);
+            this.ConnectionResult.Location = new System.Drawing.Point(450, 560);
             this.ConnectionResult.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.ConnectionResult.Name = "ConnectionResult";
             this.ConnectionResult.Size = new System.Drawing.Size(75, 25);
@@ -279,11 +280,22 @@
             this.AllCheckedClear.UseVisualStyleBackColor = true;
             this.AllCheckedClear.Click += new System.EventHandler(this.AllCheckedClear_Click);
             // 
+            // RememberMe_CheckBox
+            // 
+            this.RememberMe_CheckBox.AutoSize = true;
+            this.RememberMe_CheckBox.Location = new System.Drawing.Point(64, 502);
+            this.RememberMe_CheckBox.Name = "RememberMe_CheckBox";
+            this.RememberMe_CheckBox.Size = new System.Drawing.Size(128, 29);
+            this.RememberMe_CheckBox.TabIndex = 22;
+            this.RememberMe_CheckBox.Text = "記住密碼";
+            this.RememberMe_CheckBox.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1502, 811);
+            this.Controls.Add(this.RememberMe_CheckBox);
             this.Controls.Add(this.AllCheckedClear);
             this.Controls.Add(this.AllChecked);
             this.Controls.Add(this.label7);
@@ -309,6 +321,7 @@
             this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Form1";
             this.Text = "RunMultiSqlscript";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -339,6 +352,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button AllChecked;
         private System.Windows.Forms.Button AllCheckedClear;
+        private System.Windows.Forms.CheckBox RememberMe_CheckBox;
     }
 }
 

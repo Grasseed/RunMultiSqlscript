@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -97,6 +98,24 @@ namespace RunMultiSqlscript
         #endregion
 
         #region 功能
+        /// <summary>
+        /// 載入主畫面
+        /// </summary>
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //預設記住連線IP、DB名稱、使用者名稱
+            DBLocation.Focus();
+            DBLocation.Text = ConfigurationManager.AppSettings["connectionString"];
+            DBName.Text = ConfigurationManager.AppSettings["databaseName"];
+            UserName.Text = ConfigurationManager.AppSettings["userName"];
+
+            //如果記住密碼被勾選，把密碼賦予文字框
+            if (ConfigurationManager.AppSettings["rememberMe"].Equals("true"))
+            {
+                password.Text = ConfigurationManager.AppSettings["passWord"];
+                RememberMe_CheckBox.Checked = true;
+            }
+        }
         /// <summary>
         /// 選擇資料夾
         /// </summary>
@@ -244,7 +263,14 @@ namespace RunMultiSqlscript
         {
 			string ConnectionString = $@"Data Source={DBLocation.Text};Initial Catalog={DBName.Text};Persist Security Info=True;User Id={UserName.Text};Password={password.Text}";
 			bool IsConnected = false;
-			if (DBConnect.Text == "中斷連線")
+
+			//記住連線資訊、帳號
+            Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+			cfa.AppSettings.Settings["connectionString"].Value = DBLocation.Text;
+			cfa.AppSettings.Settings["databaseName"].Value = DBName.Text;
+            cfa.AppSettings.Settings["userName"].Value = UserName.Text;
+
+ 			if (DBConnect.Text == "中斷連線")
 			{
 				DBConnect.Text = "連線";
 				ConnectionResult.Text = "未連線";
@@ -263,7 +289,6 @@ namespace RunMultiSqlscript
 				ConnectionResult.ForeColor = Color.Black;
 
 				//測試資料庫連線
-
 				SqlConnection sqlConnection = new SqlConnection(ConnectionString);
 				try
 				{
@@ -309,6 +334,22 @@ namespace RunMultiSqlscript
 						ScriptBtnSettings(false);
 					}
 				}
+
+                //確認是否記住密碼
+                if (RememberMe_CheckBox.Checked)
+                {
+                    //記住密碼，保存密碼資訊
+                    cfa.AppSettings.Settings["rememberMe"].Value = "true";
+                    cfa.AppSettings.Settings["passWord"].Value = password.Text;
+                }
+                else
+                {
+                    //不記住密碼，清除密碼記憶資訊
+                    cfa.AppSettings.Settings["rememberMe"].Value = "false";
+                    cfa.AppSettings.Settings["passWord"].Value = "";
+                }
+                //保存連線資訊
+                cfa.Save();
 			}
         }
 
