@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Data.SqlTypes;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace RunMultiSqlscript
 {
@@ -70,26 +71,26 @@ namespace RunMultiSqlscript
 			fs.Close();
 		}
 		/// <summary>
-		/// 寫入檔案內容(ANSI編碼)
+		/// 寫入檔案內容(本機編碼)
 		/// </summary>
 		/// <param name="path"></param>
 		/// <param name="content"></param>
 		public void ContentWrite(string path,string content)
         {
-			using (StreamWriter writetext = new StreamWriter(path, true, Encoding.Default))
+			using (StreamWriter writetext = new StreamWriter(path, true, Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)))
 			{
 				writetext.WriteLine(content);
 			}
 		}
-		/// <summary>
-		/// 讀取檔案內容
-		/// </summary>
-		/// <param name="path"></param>
-		/// <returns readtext></returns>
-		public string ContentRead(string path)
+        /// <summary>
+        /// 讀取檔案內容(本機編碼)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns readtext></returns>
+        public string ContentRead(string path)
         {
 			string readtext = "";
-			using (StreamReader reader = new StreamReader(path, Encoding.Default))
+			using (StreamReader reader = new StreamReader(path, Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)))
 			{
 				readtext = reader.ReadToEnd();				
 			}
@@ -388,7 +389,7 @@ namespace RunMultiSqlscript
                     }
 
 					//設定sqlcmd參數
-                    string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -i ""{FilePath}{"list.sql"}"" -o ""{FilePath}{"log"}{"\\"}{FileLog}""";
+                    string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -u -i ""{FilePath}{"list.sql"}"" -o ""{FilePath}{"log"}{"\\"}{FileLog}""";
 					//開始執行sqlcmd
 					ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
 					process.UseShellExecute = false;
