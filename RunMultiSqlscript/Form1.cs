@@ -59,7 +59,7 @@ namespace RunMultiSqlscript
 		}
         #endregion
 
-        #region 讀取\寫入
+        #region 方法
         /// <summary>
         /// 清空檔案內容
         /// </summary>
@@ -71,13 +71,13 @@ namespace RunMultiSqlscript
 			fs.Close();
 		}
 		/// <summary>
-		/// 寫入檔案內容(本機編碼)
+		/// 寫入檔案內容(UTF8)
 		/// </summary>
 		/// <param name="path"></param>
 		/// <param name="content"></param>
 		public void ContentWrite(string path,string content)
         {
-			using (StreamWriter writetext = new StreamWriter(path, true, Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)))
+			using (StreamWriter writetext = new StreamWriter(path, true, Encoding.UTF8))
 			{
 				writetext.WriteLine(content);
 			}
@@ -98,11 +98,11 @@ namespace RunMultiSqlscript
 		}
         #endregion
 
-        #region 功能
-        /// <summary>
-        /// 載入主畫面
-        /// </summary>
-        private void Form1_Load(object sender, EventArgs e)
+		#region 功能
+		/// <summary>
+		/// 載入主畫面
+		/// </summary>
+		private void Form1_Load(object sender, EventArgs e)
         {
             //預設記住連線IP、DB名稱、使用者名稱
             DBLocation.Focus();
@@ -240,9 +240,23 @@ namespace RunMultiSqlscript
 
             if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
 			{
-				foreach(var str in FileCheckedList.CheckedItems)
+				foreach(var FileCheckedListName in FileCheckedList.CheckedItems)
                 {
-					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";//寫入sql字串資料
+					//Sqlcmd 含空格需加雙引號
+					if (FolderPath.Text.Contains(" ") || FileCheckedListName.ToString().Contains(" "))
+					{
+						sqlText += $@"PRINT'----------------------------------------------------------------------'
+									PRINT N'開始執行{FileCheckedListName}...'
+									Go
+									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""{"\n"}";
+					}
+					else
+					{
+						sqlText += $@"PRINT'----------------------------------------------------------------------'
+									PRINT N'開始執行{FileCheckedListName}...'
+									Go
+									:r {FolderPath.Text}{"\\"}{FileCheckedListName}{"\n"} ";
+					}
 				}
 				string FileName = saveFileDialog.FileName + saveFileDialog.Filter;//檔名+副檔名
 				
@@ -365,9 +379,23 @@ namespace RunMultiSqlscript
 			//判斷資料夾路徑是否存在
 			if (Directory.Exists(FolderPath.Text))
 			{
-				foreach (var str in FileCheckedList.CheckedItems)
+				foreach (var FileCheckedListName in FileCheckedList.CheckedItems)
 				{
-					sqlText += $@":r {FolderPath.Text}{"\\"}{str}{"\n"}";
+					//Sqlcmd 含空格需加雙引號
+					if (FolderPath.Text.Contains(" ") || FileCheckedListName.ToString().Contains(" "))
+					{
+						sqlText += $@"PRINT'----------------------------------------------------------------------'
+									PRINT N'開始執行{FileCheckedListName}...'
+									Go
+									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""{"\n"}";
+					}
+					else
+					{
+						sqlText += $@"PRINT'----------------------------------------------------------------------'
+									PRINT N'開始執行{FileCheckedListName}...'
+									Go
+									:r {FolderPath.Text}{"\\"}{FileCheckedListName}{"\n"} ";
+					}
 				}
 
 				if (File.Exists($@"{FilePath}{"list.sql"}"))
