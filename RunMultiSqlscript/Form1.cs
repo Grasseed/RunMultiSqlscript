@@ -248,14 +248,16 @@ namespace RunMultiSqlscript
 						sqlText += $@"PRINT'----------------------------------------------------------------------'
 									PRINT N'開始執行{FileCheckedListName}...'
 									Go
-									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""{"\n"}";
+									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""
+									Go{"\n"}";
 					}
 					else
 					{
 						sqlText += $@"PRINT'----------------------------------------------------------------------'
 									PRINT N'開始執行{FileCheckedListName}...'
 									Go
-									:r {FolderPath.Text}{"\\"}{FileCheckedListName}{"\n"} ";
+									:r {FolderPath.Text}{"\\"}{FileCheckedListName}
+									Go{"\n"}";
 					}
 				}
 				string FileName = saveFileDialog.FileName + saveFileDialog.Filter;//檔名+副檔名
@@ -387,14 +389,16 @@ namespace RunMultiSqlscript
 						sqlText += $@"PRINT'----------------------------------------------------------------------'
 									PRINT N'開始執行{FileCheckedListName}...'
 									Go
-									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""{"\n"}";
+									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""
+									Go{"\n"}";
 					}
 					else
 					{
 						sqlText += $@"PRINT'----------------------------------------------------------------------'
 									PRINT N'開始執行{FileCheckedListName}...'
 									Go
-									:r {FolderPath.Text}{"\\"}{FileCheckedListName}{"\n"} ";
+									:r {FolderPath.Text}{"\\"}{FileCheckedListName}
+									Go{"\n"}";
 					}
 				}
 
