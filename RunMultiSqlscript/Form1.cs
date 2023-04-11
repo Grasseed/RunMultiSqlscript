@@ -15,6 +15,7 @@ using System.Threading;
 using System.Data.SqlTypes;
 using System.Xml.Linq;
 using System.Globalization;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace RunMultiSqlscript
 {
@@ -370,11 +371,11 @@ namespace RunMultiSqlscript
 			}
         }
 
-        /// <summary>
-        /// 執行資料庫SQL更新
-        /// </summary>
-        private void RunScript_Click(object sender, EventArgs e)
-        {
+		/// <summary>
+		/// 執行資料庫SQL更新
+		/// </summary>
+		private async void RunScript_Click(object sender, EventArgs e)
+		{
 			string sqlText = "";
 			FileLog = "view_" + String.Format("{0:yyyyMMdd}", DateTime.Now) + "_" + String.Format("{0:HHmmss}", DateTime.Now) + ".log";
 
@@ -422,16 +423,11 @@ namespace RunMultiSqlscript
 
 					//設定sqlcmd參數
                     string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -u -i ""{FilePath}{"list.sql"}"" -o ""{FilePath}{"log"}{"\\"}{FileLog}""";
-					//開始執行sqlcmd
-					ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
-					process.UseShellExecute = false;
-					process.CreateNoWindow = true;
-                    process.WindowStyle = ProcessWindowStyle.Hidden;
-                    process.RedirectStandardOutput = true;
-                    Process proc = new Process();
-					proc.StartInfo = process;
-                    proc.Start();
-					MessageBox.Show($@"已放置執行紀錄於.\log");
+					// 設定進度條的最大值和最小值
+					progressBar.Minimum = 0;
+					progressBar.Maximum = FileCheckedList.CheckedItems.Count;
+					// 使用異步方式執行SQL更新
+					await ExecuteSqlAsync(argument);
 				}
             }
             else
@@ -440,10 +436,42 @@ namespace RunMultiSqlscript
             }
 		}
 
-        /// <summary>
-        /// 項目更動
-        /// </summary>
-        private void FileCheckedList_SelectedIndexChanged(object sender, EventArgs e)
+		/// <summary>
+		/// 執行資料庫SQL更新
+		/// </summary>
+		private async Task ExecuteSqlAsync(string argument)
+		{
+			for (int i = 0; i < FileCheckedList.CheckedItems.Count; i++)
+			{
+				// 更新進度條的值
+				progressBar.Value = i + 1;
+
+				// 開始執行sqlcmd
+				ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
+				process.UseShellExecute = false;
+				process.CreateNoWindow = true;
+				process.WindowStyle = ProcessWindowStyle.Hidden;
+				process.RedirectStandardOutput = true;
+
+				// 使用Task.Run在另一個線程上運行Process
+				await Task.Run(() =>
+				{
+					using (Process proc = new Process())
+					{
+						proc.StartInfo = process;
+						proc.Start();
+						proc.WaitForExit();
+					}
+				});
+			}
+
+			MessageBox.Show("已放置執行紀錄於./log");
+		}
+
+		/// <summary>
+		/// 項目更動
+		/// </summary>
+		private void FileCheckedList_SelectedIndexChanged(object sender, EventArgs e)
         {
 			ScriptBtnLock();//右側script生成&執行區域啟用/禁用
 		}
