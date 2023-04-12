@@ -16,6 +16,7 @@ using System.Data.SqlTypes;
 using System.Xml.Linq;
 using System.Globalization;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Ude;
 
 namespace RunMultiSqlscript
 {
@@ -97,13 +98,37 @@ namespace RunMultiSqlscript
 			}
 			return readtext;
 		}
-        #endregion
-
-		#region 功能
 		/// <summary>
-		/// 載入主畫面
+		/// 偵測檔案編碼
 		/// </summary>
-		private void Form1_Load(object sender, EventArgs e)
+		/// <param name="path"></param>
+		/// <returns readtext></returns>
+		private Encoding DetectFileEncoding(string filePath)
+		{
+			using (FileStream fs = File.OpenRead(filePath))
+			{
+				ICharsetDetector detector = new CharsetDetector();
+				detector.Feed(fs);
+				detector.DataEnd();
+
+				if (detector.Charset != null)
+				{
+					return Encoding.GetEncoding(detector.Charset);
+				}
+				else
+				{
+					// 如果無法檢測到編碼，則返回預設編碼
+					return Encoding.Default;
+				}
+			}
+		}
+		#endregion
+
+	#region 功能
+	/// <summary>
+	/// 載入主畫面
+	/// </summary>
+	private void Form1_Load(object sender, EventArgs e)
         {
             //預設記住連線IP、DB名稱、使用者名稱
             DBLocation.Focus();
@@ -376,93 +401,96 @@ namespace RunMultiSqlscript
 		/// </summary>
 		private async void RunScript_Click(object sender, EventArgs e)
 		{
-			string sqlText = "";
 			FileLog = "view_" + String.Format("{0:yyyyMMdd}", DateTime.Now) + "_" + String.Format("{0:HHmmss}", DateTime.Now) + ".log";
 
 			//判斷資料夾路徑是否存在
 			if (Directory.Exists(FolderPath.Text))
 			{
+				List<string> sqlFiles = new List<string>();
+
 				foreach (var FileCheckedListName in FileCheckedList.CheckedItems)
 				{
-					//Sqlcmd 含空格需加雙引號
-					if (FolderPath.Text.Contains(" ") || FileCheckedListName.ToString().Contains(" "))
-					{
-						sqlText += $@"PRINT'----------------------------------------------------------------------'
-									PRINT N'開始執行{FileCheckedListName}...'
-									Go
-									:r ""{FolderPath.Text}{"\\"}{FileCheckedListName}""
-									Go{"\n"}";
-					}
-					else
-					{
-						sqlText += $@"PRINT'----------------------------------------------------------------------'
-									PRINT N'開始執行{FileCheckedListName}...'
-									Go
-									:r {FolderPath.Text}{"\\"}{FileCheckedListName}
-									Go{"\n"}";
-					}
+					sqlFiles.Add(Path.Combine(FolderPath.Text, FileCheckedListName.ToString()));
 				}
 
-				if (File.Exists($@"{FilePath}{"list.sql"}"))
+				//設定進度條的最大值和最小值
+				progressBar.Minimum = 0;
+				progressBar.Maximum = FileCheckedList.CheckedItems.Count;
+
+				// 如果log資料夾不存在就自動生成
+				if (!Directory.Exists(LogPath))
 				{
-					//清空文件
-					ContentClear($@"{FilePath}{"list.sql"}");
+					Directory.CreateDirectory("log");
 				}
 
-				//儲存清單.sql
-				ContentWrite($@"{FilePath}{"list.sql"}", sqlText);
-
-                DialogResult result = MessageBox.Show("是否執行勾選的script?", "提示", MessageBoxButtons.YesNo);
-                if (result == DialogResult.Yes)
-				{
-					//如果log資料夾不存在就自動生成
-					if (!Directory.Exists(LogPath))
-					{ 
-						Directory.CreateDirectory("log");
-                    }
-
-					//設定sqlcmd參數
-                    string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -u -i ""{FilePath}{"list.sql"}"" -o ""{FilePath}{"log"}{"\\"}{FileLog}""";
-					// 設定進度條的最大值和最小值
-					progressBar.Minimum = 0;
-					progressBar.Maximum = FileCheckedList.CheckedItems.Count;
-					// 使用異步方式執行SQL更新
-					await ExecuteSqlAsync(argument);
-				}
-            }
-            else
-            {
-				MessageBox.Show("資料夾路徑錯誤","提示");
-            }
+				//執行每個*.sql檔案
+				await ExecuteSqlFilesAsync(sqlFiles, FileLog);
+			}
+			else
+			{
+				MessageBox.Show("資料夾路徑錯誤", "提示");
+			}
 		}
 
 		/// <summary>
 		/// 執行資料庫SQL更新
 		/// </summary>
-		private async Task ExecuteSqlAsync(string argument)
+		private async Task ExecuteSqlFilesAsync(List<string> sqlFiles, string logFile)
 		{
-			for (int i = 0; i < FileCheckedList.CheckedItems.Count; i++)
+			string tempOutputDir = Path.Combine(FilePath, "temp");
+			if (!Directory.Exists(tempOutputDir))
 			{
-				// 更新進度條的值
-				progressBar.Value = i + 1;
+				Directory.CreateDirectory(tempOutputDir);
+			}
 
-				// 開始執行sqlcmd
-				ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
-				process.UseShellExecute = false;
-				process.CreateNoWindow = true;
-				process.WindowStyle = ProcessWindowStyle.Hidden;
-				process.RedirectStandardOutput = true;
+			string logFilePath = Path.Combine(FilePath, "log", logFile);
 
-				// 使用Task.Run在另一個線程上運行Process
-				await Task.Run(() =>
+			using (StreamWriter logStreamWriter = new StreamWriter(logFilePath, true, Encoding.UTF8))
+			{
+				for (int i = 0; i < sqlFiles.Count; i++)
 				{
-					using (Process proc = new Process())
+					// 更新進度條的值
+					progressBar.Value = i + 1;
+
+					// 自動檢測SQL檔案的編碼
+					Encoding sqlFileEncoding = DetectFileEncoding(sqlFiles[i]);
+
+					// 設定sqlcmd參數，將-f設置為檢測到的編碼的代碼頁
+					string tempOutputFile = Path.Combine(tempOutputDir, $"tempOutput_{i}.txt");
+					using (File.Create(tempOutputFile)) { }
+					string argument = $@" -S {DBLocation.Text} -d {DBName.Text} -U {UserName.Text} -P {password.Text} -f {sqlFileEncoding.CodePage} -i ""{sqlFiles[i]}"" -o ""{tempOutputFile}""";
+
+					// 開始執行sqlcmd
+					ProcessStartInfo process = new ProcessStartInfo("sqlcmd", argument);
+					process.UseShellExecute = false;
+					process.CreateNoWindow = true;
+					process.WindowStyle = ProcessWindowStyle.Hidden;
+
+					// 使用Task.Run在另一個線程上運行Process
+					await Task.Run(() =>
 					{
-						proc.StartInfo = process;
-						proc.Start();
-						proc.WaitForExit();
+						using (Process proc = new Process())
+						{
+							proc.StartInfo = process;
+							proc.Start();
+							proc.WaitForExit();
+						}
+					});
+
+					// 讀取暫存檔案，將其轉換為UTF-8並寫入日誌檔案
+					using (StreamReader tempReader = new StreamReader(tempOutputFile, sqlFileEncoding))
+					{
+						string output = tempReader.ReadToEnd();
+						byte[] outputBytes = sqlFileEncoding.GetBytes(output);
+						byte[] utf8Bytes = Encoding.Convert(sqlFileEncoding, Encoding.UTF8, outputBytes);
+						string outputInUTF8 = Encoding.UTF8.GetString(utf8Bytes);
+
+						logStreamWriter.WriteLine($"----------------------------------------------------------------------");
+						logStreamWriter.WriteLine($"開始執行 {Path.GetFileName(sqlFiles[i])}...");
+						logStreamWriter.WriteLine(outputInUTF8);
+						logStreamWriter.Flush();
 					}
-				});
+				}
 			}
 
 			MessageBox.Show("已放置執行紀錄於./log");
